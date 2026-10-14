@@ -77,11 +77,28 @@ public class Main {
             if (t.getRequestURI().getRawQuery() != null && t.getRequestURI().getRawQuery().contains("blob")) {
                 blob = true;
             }
+            // --- mikeren: accept zstd/bz2 bodies, and end the stream with a status line ---
+            java.io.BufferedInputStream bis = new java.io.BufferedInputStream(is, 1 << 16);
+            bis.mark(8);
+            byte[] header = bis.readNBytes(4);
+            bis.reset();
+            InputStream in = bis;
+            if (BlobHandler.isZstd(header)) {
+                in = new ZstdCompressorInputStream(bis);
+            } else if (BlobHandler.isBzip2(header)) {
+                in = new BZip2CompressorInputStream(bis);
+            }
+            String status = "{\"type\":\"MIKEREN_DONE\"}\n";
             try {
-                new Parse(is, os, blob);
+                new Parse(in, os, blob);
             } catch (Exception e) {
                 e.printStackTrace();
+                status = "{\"type\":\"MIKEREN_FAILED\"}\n";
             }
+            if (!blob) {
+                os.write(status.getBytes());
+            }
+            // --- end mikeren ---
             os.close();
         }
     }
