@@ -51,7 +51,10 @@ public class Main {
         .build();
 
     public static void main(String[] args) throws Exception {
-        HttpServer server = HttpServer.create(new InetSocketAddress(Integer.valueOf("5600")), 0);
+        // --- mikeren: localhost only, port from argv (default 5600) ---
+        int port = args.length > 0 ? Integer.parseInt(args[0]) : 5600;
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0);
+        // --- end mikeren ---
         server.createContext("/", new MyHandler());
         server.createContext("/healthz", new HealthHandler());
         server.createContext("/blob", new BlobHandler());

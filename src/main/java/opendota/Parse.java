@@ -127,6 +127,9 @@ public class Parse {
 
     // Draft stage variable
     boolean[] draftOrderProcessed = new boolean[24];
+    // --- mikeren: Recipe 2 state ---
+    boolean[] lowHp = new boolean[10];
+    // --- end mikeren ---
     int order = 1;
     boolean isDraftStartTimeProcessed = false; // flag to know if draft start time is already handled
 
@@ -763,6 +766,28 @@ public class Parse {
                         entry.variant = variant;
                         entry.facet_hero_id = facet_hero_id;
                         entry.life_state = getEntityProperty(e, "m_lifeState", null);
+                        // --- mikeren: Recipe 1, HP/mana per interval ---
+                        entry.health = getEntityProperty(e, "m_iHealth", null);
+                        entry.max_health = getEntityProperty(e, "m_iMaxHealth", null);
+                        entry.mana = getEntityProperty(e, "m_flMana", null);
+                        entry.max_mana = getEntityProperty(e, "m_flMaxMana", null);
+                        // --- end mikeren ---
+                        // --- mikeren: Recipe 2, LOW_HP event (once per drop under 15%) ---
+                        if (entry.health != null && entry.max_health != null && entry.max_health > 0
+                                && entry.slot != null && entry.slot >= 0 && entry.slot < lowHp.length) {
+                            boolean low = entry.health > 0 && entry.health < entry.max_health * 0.15;
+                            if (low && !lowHp[entry.slot]) {
+                                Entry ev = new Entry(time);
+                                ev.type = "LOW_HP";
+                                ev.slot = entry.slot;
+                                ev.value = entry.health;
+                                ev.x = entry.x;
+                                ev.y = entry.y;
+                                output(ev);
+                            }
+                            lowHp[entry.slot] = low;
+                        }
+                        // --- end mikeren ---
                         // check if hero has been assigned to entity
                         if (hero > 0) {
                             // get the hero's entity name, ex: CDOTA_Hero_Zuus

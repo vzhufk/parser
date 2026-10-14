@@ -49,6 +49,12 @@ public class Entry implements Cloneable {
     public Integer charges;
     public Integer secondary_charges;
     public Integer life_state;
+    // --- mikeren: Recipe 1, HP/mana per interval ---
+    public Integer health;
+    public Integer max_health;
+    public Float mana;
+    public Float max_mana;
+    // --- end mikeren ---
     public Integer level;
     public Integer kills;
     public Integer deaths;
